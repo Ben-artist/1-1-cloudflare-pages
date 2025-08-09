@@ -63,7 +63,13 @@ export default function ChatBox() {
     setLoading(true);
 
     try {
-      const res = await onRequestPost(nextMessages, systemMessage.current);
+      const res = await fetch("https://cloudflare-worker2.2939117014tsk.workers.dev/", {
+        method: "POST",
+        body: JSON.stringify({
+          messages: nextMessages,
+          system: systemMessage.current,
+        }),
+      });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}: ${text}`);

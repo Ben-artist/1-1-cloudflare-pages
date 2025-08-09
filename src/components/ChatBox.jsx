@@ -36,6 +36,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: "你好，我是 DeepSeek 助手。有什么想聊的？" },
   ]);
+  const [senderKey, setSenderKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const listRef = useRef(null);
@@ -43,6 +44,7 @@ export default function ChatBox() {
     role: "system",
     content: "You are a helpful assistant.",
   });
+  const useGraphQL = (import.meta.env.VITE_USE_GRAPHQL || "").toString() === "true";
 
   useEffect(() => {
     listRef.current?.scrollTo({
@@ -55,11 +57,36 @@ export default function ChatBox() {
     const content = (contentRaw ?? "").trim();
     if (!content || loading) return;
     setError("");
+    // 发送后清空输入：通过重挂载 Sender
+    setSenderKey(k => k + 1);
     const nextMessages = [...messages, { role: "user", content }];
     setMessages(nextMessages);
     setLoading(true);
 
     try {
+      if (useGraphQL) {
+        const mutation = `mutation Chat($messages: [MessageInput!]!, $model: String){ chat(messages: $messages, model: $model){ content } }`;
+        const resp = await fetch("/graphql", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: mutation,
+            variables: {
+              messages: [systemMessage.current, ...nextMessages],
+              model: "deepseek-chat",
+            },
+          }),
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          throw new Error(`HTTP ${resp.status}: ${t}`);
+        }
+        const result = await resp.json();
+        const contentText = result?.data?.chat?.content || "";
+        setMessages(prev => [...prev, { role: "assistant", content: contentText || "（无回复内容）" }]);
+        return;
+      }
+
       const res = await fetch("/api/deepseek/chat/completions", {
         method: "POST",
         headers: {

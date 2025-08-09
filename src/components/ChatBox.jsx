@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Bubble, Sender } from "@ant-design/x";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
-import { Typography } from "antd";
 // @see https://x.ant.design/components/bubble-cn#bubble-demo-markdown
 import markdownit from "markdown-it";
 
@@ -37,9 +36,6 @@ export default function ChatBox() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: "你好，我是 DeepSeek 助手。有什么想聊的？" },
   ]);
-  // 输入由 Sender 控件管理
-  const [inputValue, setInputValue] = useState("");
-  const [senderKey, setSenderKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const listRef = useRef(null);
@@ -59,10 +55,6 @@ export default function ChatBox() {
     const content = (contentRaw ?? "").trim();
     if (!content || loading) return;
     setError("");
-    // 清空输入框（受控值 + 强制重挂载）
-    setInputValue("");
-    setSenderKey(k => k + 1);
-
     const nextMessages = [...messages, { role: "user", content }];
     setMessages(nextMessages);
     setLoading(true);

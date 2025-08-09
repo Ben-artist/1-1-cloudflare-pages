@@ -73,7 +73,7 @@ export default function ChatBox() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${
-            import.meta.env.VITE_DEEPSEEK_API_KEY || ""
+            import.meta.env.VITE_DEEPSEEK_API_KEY
           }`,
         },
         body: JSON.stringify({

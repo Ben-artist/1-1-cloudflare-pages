@@ -3,7 +3,7 @@ import { Bubble, Sender } from "@ant-design/x";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
 // @see https://x.ant.design/components/bubble-cn#bubble-demo-markdown
 import markdownit from "markdown-it";
-
+import { onRequestPost } from "../../functions/work";
 const md = markdownit({ html: true, breaks: true });
 const fooAvatar = {
   color: "#f56a00",
@@ -44,7 +44,6 @@ export default function ChatBox() {
     role: "system",
     content: "You are a helpful assistant.",
   });
-  const useGraphQL = (import.meta.env.VITE_USE_GRAPHQL || "").toString() === "true";
 
   useEffect(() => {
     listRef.current?.scrollTo({
@@ -64,47 +63,7 @@ export default function ChatBox() {
     setLoading(true);
 
     try {
-      if (useGraphQL) {
-        const mutation = `mutation Chat($messages: [MessageInput!]!, $model: String){ chat(messages: $messages, model: $model){ content } }`;
-        const resp = await fetch("/graphql", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: mutation,
-            variables: {
-              messages: [systemMessage.current, ...nextMessages],
-              model: "deepseek-chat",
-            },
-          }),
-        });
-        if (!resp.ok) {
-          const t = await resp.text();
-          throw new Error(`HTTP ${resp.status}: ${t}`);
-        }
-        const result = await resp.json();
-        const contentText = result?.data?.chat?.content || "";
-        setMessages(prev => [...prev, { role: "assistant", content: contentText || "（无回复内容）" }]);
-        return;
-      }
-
-      const res = await fetch("/api/deepseek/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${
-            import.meta.env.VITE_DEEPSEEK_API_KEY
-          }`,
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            systemMessage.current,
-            ...nextMessages.map(m => ({ role: m.role, content: m.content })),
-          ],
-          stream: true,
-        }),
-      });
-
+      const res = await onRequestPost(nextMessages, systemMessage.current);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}: ${text}`);

@@ -63,7 +63,7 @@ export default function ChatBox() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://cloudflare-worker2.2939117014tsk.workers.dev/", {
+      const res = await fetch("https://ai-talk.life/api", {
         method: "POST",
         body: JSON.stringify({
           messages: nextMessages,

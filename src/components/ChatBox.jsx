@@ -3,7 +3,6 @@ import { Bubble, Sender } from "@ant-design/x";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
 // @see https://x.ant.design/components/bubble-cn#bubble-demo-markdown
 import markdownit from "markdown-it";
-import { onRequestPost } from "../../functions/work";
 const md = markdownit({ html: true, breaks: true });
 const fooAvatar = {
   color: "#f56a00",
@@ -36,7 +35,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: "你好，我是 DeepSeek 助手。有什么想聊的？" },
   ]);
-  const [senderKey, setSenderKey] = useState(0);
+  const [senderValue, setSenderValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const listRef = useRef(null);
@@ -57,7 +56,7 @@ export default function ChatBox() {
     if (!content || loading) return;
     setError("");
     // 发送后清空输入：通过重挂载 Sender
-    setSenderKey(k => k + 1);
+    setSenderValue("");
     const nextMessages = [...messages, { role: "user", content }];
     setMessages(nextMessages);
     setLoading(true);
@@ -163,11 +162,13 @@ export default function ChatBox() {
 
       <div className="border-t p-3">
         <Sender
+          value={senderValue}
           placeholder="输入你的问题，按 Enter 发送（Shift+Enter 换行）"
-          onSubmit={val => {
-            if (val && val.trim()) {
-              send(val);
-            }
+          onChange={value => {
+            setSenderValue(value);
+          }}
+          onSubmit={() => {
+            send(senderValue);
           }}
           disabled={loading}
         />
